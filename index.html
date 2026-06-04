@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semangat Sidang Skripsi Hera! 🎓💖</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; 
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            height: 100vh;
+            touch-action: manipulation; 
+        }
+
+        h1, h2, h3, .fredoka {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px 0 rgba(255, 105, 180, 0.2);
+        }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #ff9a9e 0%, #ff8da1 100%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        
+        #splash-screen.hidden-splash {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Animasi Foto Melayang & Interaktif */
+        .photo-container {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .photo-container:active {
+            transform: scale(0.95);
+        }
+
+        .floating-photo {
+            animation: floatPhoto 4s ease-in-out infinite;
+            filter: contrast(1.1) saturate(1.2) brightness(1.05);
+            object-position: top center;
+        }
+
+        @keyframes floatPhoto {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1.5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        /* Mini Particles */
+        .mini-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: popParticle 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            font-size: 1.5rem;
+            z-index: 20;
+        }
+
+        @keyframes popParticle {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1.5); opacity: 0; }
+        }
+
+        /* Canvas Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            z-index: 0;
+        }
+
+        /* Transisi Pesan */
+        #message-box {
+            transition: opacity 0.3s ease;
+        }
+
+        .wiggle {
+            display: inline-block;
+            animation: wiggleAnim 2s infinite;
+        }
+
+        @keyframes wiggleAnim {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* Animasi Text Haru */
+        .pulse-text {
+            animation: pulseTextAnim 2.5s infinite;
+        }
+
+        @keyframes pulseTextAnim {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center relative">
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="text-center px-4">
+        <div class="text-6xl mb-4 wiggle">💌</div>
+        <h1 class="text-3xl md:text-5xl font-bold text-white mb-6 drop-shadow-md fredoka">Ada Pesan Spesial Buat Hera!</h1>
+        <p class="text-white text-lg md:text-xl mb-8 opacity-90">Tarik napas dulu, lalu buka ya...</p>
+        <button onclick="startExperience()" class="fredoka bg-white text-pink-500 font-bold text-2xl py-4 px-10 rounded-full shadow-xl hover:scale-105 hover:bg-pink-50 transition-all duration-300">
+            Buka Suratnya 🎀
+        </button>
+    </div>
+
+    <!-- Canvas Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Konten Utama -->
+    <div id="main-content" class="relative z-10 w-[95%] max-w-lg mx-auto glass-card rounded-3xl p-5 md:p-8 text-center opacity-0 scale-95 transition-all duration-1000 ease-out" style="display: none;">
+        
+        <!-- Hiasan -->
+        <div class="absolute -top-4 -left-3 text-4xl wiggle opacity-80">🌸</div>
+        <div class="absolute -bottom-4 -right-3 text-4xl wiggle opacity-80" style="animation-delay: 1s;">✨</div>
+
+        <!-- Foto Interaktif -->
+        <div class="photo-container w-40 h-40 md:w-44 md:h-44 mx-auto mb-3" onclick="spawnParticles(event)">
+            <div class="absolute inset-0 bg-pink-300 rounded-full animate-ping opacity-30"></div>
+            <img id="hera-photo" src="44218.jpeg" alt="Foto Hera Herlina" 
+                 class="floating-photo relative w-full h-full object-cover rounded-full border-[4px] border-white shadow-xl z-10 bg-pink-100 select-none">
+            <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-pink-500 text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full z-20 shadow-md fredoka whitespace-nowrap animate-bounce">
+                Tap fotoku! 👆
+            </div>
+        </div>
+
+        <!-- Judul -->
+        <h1 class="text-2xl md:text-4xl font-bold text-pink-600 mb-1 drop-shadow-sm fredoka">
+            Semangat Sidang!
+        </h1>
+        
+        <!-- Nama -->
+        <h2 class="text-xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 mb-3 tracking-wide uppercase">
+            Hera Herlina
+        </h2>
+
+        <!-- Kotak Pesan Interaktif -->
+        <div class="bg-white/80 rounded-2xl p-4 mb-4 shadow-inner border border-pink-200 relative min-h-[130px] flex items-center justify-center">
+            <p id="message-box" class="text-pink-800 text-base md:text-lg leading-relaxed font-semibold">
+                Tarik napas panjang, kamu pasti bisa! Semua perjuanganmu, begadang, dan tangismu akan terbayar lunas hari ini. 🎓✨
+            </p>
+            <button onclick="changeMessage()" class="absolute -right-3 -bottom-3 bg-pink-400 text-white w-10 h-10 rounded-full shadow-md flex items-center justify-center hover:bg-pink-500 hover:rotate-180 transition-all duration-300 z-10">
+                🔄
+            </button>
+        </div>
+
+        <!-- Pesan Haru (Statis) -->
+        <div class="mb-5 pulse-text bg-pink-50/50 rounded-xl p-3 border border-pink-100">
+            <p class="text-pink-700 text-sm md:text-base italic font-medium leading-tight">
+                "Sebelum melangkah masuk ruang sidang, sempatkan telepon atau chat Ibu & Bapak ya. Minta doa restu mereka, karena ridho merekalah yang akan memudahkan segala urusanmu hari ini." 🥺💖
+            </p>
+        </div>
+
+        <!-- Tombol Utama -->
+        <button onclick="megaCheer()" class="w-full bg-gradient-to-r from-pink-400 via-pink-500 to-purple-500 text-white font-bold text-lg md:text-xl py-3 px-6 rounded-2xl shadow-[0_8px_20px_rgba(236,72,153,0.4)] border-2 border-white/50 hover:shadow-[0_10px_25px_rgba(236,72,153,0.6)] hover:scale-[1.02] active:scale-95 transition-all duration-200">
+            KIRIM ENERGI POSITIF! 🚀
+        </button>
+    </div>
+
+    <!-- Script Logika -->
+    <script>
+        // --- DATA PESAN SHUFFLE ---
+        const messages = [
+            "Tarik napas panjang, kamu pasti bisa! Semua perjuanganmu, begadang, dan tangismu akan terbayar lunas hari ini. 🎓✨",
+            "Jangan lupa minta doa Ibu dan Bapak ya. Doa mereka itu 'jalur langit' yang paling ampuh buat meluluhkan hati dosen penguji. 🤲💖",
+            "Percaya diri, tenang, dan berikan yang terbaik. Dosen penguji bukan monster kok, mereka cuma mau lihat sejauh mana kamu paham karyamu sendiri! 💪",
+            "Revisian berbulan-bulan cuma buat hari ini. Tunjukin kalau kamu menguasai materimu di luar kepala! 🔥",
+            "Gelar Sarjana udah di depan mata Hera! Tinggal selangkah lagi. Semangat pantang mundur, kamu hebat sudah bertahan sejauh ini! 🥺💖"
+        ];
+        let currentMsgIndex = 0;
+
+        function changeMessage() {
+            const msgBox = document.getElementById('message-box');
+            msgBox.style.opacity = 0; 
+            setTimeout(() => {
+                currentMsgIndex = (currentMsgIndex + 1) % messages.length;
+                msgBox.innerText = messages[currentMsgIndex];
+                msgBox.style.opacity = 1; 
+            }, 300);
+        }
+
+        function startExperience() {
+            const splash = document.getElementById('splash-screen');
+            const mainContent = document.getElementById('main-content');
+            
+            splash.classList.add('hidden-splash');
+            
+            setTimeout(() => {
+                splash.style.display = 'none';
+                mainContent.style.display = 'block';
+                void mainContent.offsetWidth; 
+                mainContent.classList.remove('opacity-0', 'scale-95');
+                mainContent.classList.add('opacity-100', 'scale-100');
+                
+                initBackgroundCanvas();
+            }, 800);
+
+            try {
+                let msg = new SpeechSynthesisUtterance("Halo Hera, semangat ya! Jangan lupa minta doa orang tua.");
+                msg.lang = 'id-ID';
+                window.speechSynthesis.speak(msg);
+            } catch(e) {}
+        }
+
+        function spawnParticles(e) {
+            const container = document.querySelector('.photo-container');
+            const rect = container.getBoundingClientRect();
+            const originX = rect.width / 2;
+            const originY = rect.height / 2;
+
+            const icons = ['💖', '✨', '🌟', '🎓', '🤲', '🥺'];
+            const numParticles = 6;
+
+            for(let i = 0; i < numParticles; i++) {
+                const el = document.createElement('div');
+                el.classList.add('mini-particle');
+                el.innerText = icons[Math.floor(Math.random() * icons.length)];
+                
+                el.style.left = `${originX}px`;
+                el.style.top = `${originY}px`;
+                
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 80 + 50; 
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                el.style.setProperty('--tx', `${tx}px`);
+                el.style.setProperty('--ty', `${ty}px`);
+                
+                container.appendChild(el);
+                setTimeout(() => el.remove(), 1000);
+            }
+        }
+
+        function megaCheer() {
+            spawnParticles();
+
+            try {
+                let msg = new SpeechSynthesisUtterance("Kamu pasti bisa, Hera!");
+                msg.lang = 'id-ID';
+                msg.pitch = 1.2;
+                window.speechSynthesis.speak(msg);
+            } catch(e) {}
+
+            var count = 250;
+            var defaults = { origin: { y: 0.7 } };
+
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+
+            fire(0.25, { spread: 26, startVelocity: 55, colors: ['#ff9a9e', '#fecfef', '#ffffff'] });
+            fire(0.2, { spread: 60 });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 120, startVelocity: 45 });
+        }
+
+        // Latar Belakang Canvas
+        function initBackgroundCanvas() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            let mouse = { x: null, y: null, radius: 100 };
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
+            window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+            window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+            window.addEventListener('touchend', () => { mouse.x = null; mouse.y = null; });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = height + Math.random() * 100;
+                    this.size = Math.random() * 12 + 8;
+                    this.speedY = Math.random() * -1 - 0.5;
+                    this.speedX = Math.random() * 1 - 0.5;
+                    this.color = ['rgba(255,192,203,0.4)', 'rgba(255,105,180,0.3)', 'rgba(255,255,255,0.5)'][Math.floor(Math.random() * 3)];
+                    this.type = Math.random() > 0.4 ? 'circle' : 'heart';
+                    this.angle = Math.random() * 360;
+                    this.spin = Math.random() * 0.05 - 0.025;
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.angle);
+                    
+                    if (this.type === 'circle') {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                        ctx.fillStyle = this.color;
+                        ctx.fill();
+                    } else {
+                        ctx.fillStyle = this.color;
+                        ctx.beginPath();
+                        const s = this.size / 20;
+                        ctx.moveTo(0, 5 * s);
+                        ctx.bezierCurveTo(-5 * s, -5 * s, -15 * s, 5 * s, 0, 15 * s);
+                        ctx.bezierCurveTo(15 * s, 5 * s, 5 * s, -5 * s, 0, 5 * s);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                update() {
+                    this.y += this.speedY;
+                    this.x += this.speedX;
+                    this.angle += this.spin;
+
+                    if (mouse.x != null && mouse.y != null) {
+                        let dx = mouse.x - this.x;
+                        let dy = mouse.y - this.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < mouse.radius) {
+                            const forceDirectionX = dx / distance;
+                            const forceDirectionY = dy / distance;
+                            const force = (mouse.radius - distance) / mouse.radius;
+                            this.x -= forceDirectionX * force * 5;
+                            this.y -= forceDirectionY * force * 2; 
+                        }
+                    }
+
+                    if (this.y < -50 || this.x < -50 || this.x > width + 50) {
+                        this.y = height + 50;
+                        this.x = Math.random() * width;
+                        this.speedY = Math.random() * -1 - 0.5;
+                    }
+
+                    this.draw();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                const numParticles = Math.min(width / 15, 30); 
+                for (let i = 0; i < numParticles; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            initParticles();
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => p.update());
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+    </script>
+</body>
+</html>
